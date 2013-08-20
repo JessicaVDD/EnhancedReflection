@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace GradualData.Reflection
+namespace Willow.Reflection
 {
     public class StaticReflectionWrapper
     {

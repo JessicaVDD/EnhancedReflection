@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("GradualData")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Willow.Reflection")]
+[assembly: AssemblyDescription("Reflection library")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Radar Automation NV")]
-[assembly: AssemblyProduct("GradualData")]
-[assembly: AssemblyCopyright("Copyright © Radar Automation NV 2013")]
+[assembly: AssemblyCompany("Willow")]
+[assembly: AssemblyProduct("Willow.Reflection")]
+[assembly: AssemblyCopyright("Peter Van den Daele")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

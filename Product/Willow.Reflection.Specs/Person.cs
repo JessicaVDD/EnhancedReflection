@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Willow.Reflection
+namespace Willow.Reflection.Specs
 {
     public class Person
     {

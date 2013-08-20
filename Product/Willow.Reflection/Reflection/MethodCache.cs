@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace GradualData.Reflection
+namespace Willow.Reflection
 {
     public abstract class MethodCache<TOwner>
     {

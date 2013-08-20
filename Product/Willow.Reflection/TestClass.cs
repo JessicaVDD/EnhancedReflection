@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
-using GradualData.Reflection;
+using Willow.Reflection;
 
-namespace GradualData
+namespace Willow.Reflection
 {
     public class TestClass
     {

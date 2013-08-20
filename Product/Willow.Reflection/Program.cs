@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlServerCe;
 
-namespace GradualData
+namespace Willow.Reflection
 {
     class Program
     {

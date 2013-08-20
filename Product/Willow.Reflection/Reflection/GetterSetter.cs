@@ -1,4 +1,4 @@
-﻿namespace GradualData.Reflection
+﻿namespace Willow.Reflection
 {
     public class GetterSetter<TOwner, TField>
     {

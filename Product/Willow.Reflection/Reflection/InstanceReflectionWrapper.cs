@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace GradualData.Reflection
+namespace Willow.Reflection
 {
     public class InstanceReflectionWrapper : StaticReflectionWrapper
     {

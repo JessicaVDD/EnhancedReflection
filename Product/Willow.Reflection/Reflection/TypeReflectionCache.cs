@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GradualData.Reflection
+namespace Willow.Reflection
 {
     public class TypeReflectionCache
     {

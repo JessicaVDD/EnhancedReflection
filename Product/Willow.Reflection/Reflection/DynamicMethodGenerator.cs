@@ -3,9 +3,9 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace GradualData.Reflection
+namespace Willow.Reflection
 {
-    internal static class DynamicMethodGenerator
+    public static class DynamicMethodGenerator
     {
         const BindingFlags _InstanceBinding = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
         const BindingFlags _StaticBinding = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
@@ -29,7 +29,7 @@ namespace GradualData.Reflection
         {
             return GenerateInstanceFieldSetter<TOwner, object>(fld);
         }
-        internal static Action<TOwner, TField> GenerateInstanceFieldSetter<TOwner, TField>(FieldInfo fld)
+        public static Action<TOwner, TField> GenerateInstanceFieldSetter<TOwner, TField>(FieldInfo fld)
         {
             if (fld == null) throw new ArgumentNullException("fld");
             if (fld.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "fld");

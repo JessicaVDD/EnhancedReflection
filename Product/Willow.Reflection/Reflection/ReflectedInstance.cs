@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GradualData.Reflection
+namespace Willow.Reflection
 {
     public class ReflectedInstance<TOwner>
     {
