@@ -1,0 +1,7 @@
+Reflection library.
+
+Building a reflection tool set.
+* Fast reflection calls
+* Controllable reflection cache
+* Easy to use fluent syntax
+* IL generated functions
