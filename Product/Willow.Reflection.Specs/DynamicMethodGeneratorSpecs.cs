@@ -13,7 +13,7 @@ namespace Willow.Reflection.Specs
 {
     public class DynamicMethodGeneratorSpecs
     {
-        [Subject(typeof(DynamicMethodGenerator))]
+        [Subject(typeof(DynamicMethodGenerator), "Reflection")]
         public class when_creating_a_field_setter : Observes
         {
             Because b = () => 
@@ -27,7 +27,7 @@ namespace Willow.Reflection.Specs
                 for (var i = 0; i < fields.Count; i++)
                 {
                     var fieldDelegate = DynamicMethodGenerator.GenerateInstanceFieldSetter<FieldClass, object>(fields[i]);
-                    var fieldDefault = fields[i].CustomAttributes.OfType<DefaultValueAttribute>().First().Value;
+                    var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
                     fieldDelegate(fc, fieldDefault);
                     fields[i].GetValue(fc).ShouldEqual(fieldDefault);
                 }
@@ -38,32 +38,37 @@ namespace Willow.Reflection.Specs
                 var fc = new FieldClass();
                 for (var i = 0; i < fields.Count; i++)
                 {
-                    var method = typeof(DynamicMethodGenerator).GetMethods().Where(x => x.Name.Equals("GenerateInstanceFieldSetter") && x.GetParameters().First().ParameterType == typeof(FieldInfo) && x.GetGenericArguments().Count() == 2).FirstOrDefault();
+                    var method = typeof(DynamicMethodGenerator).GetMethods().First(x => x.Name.Equals("GenerateInstanceFieldSetter") && x.GetParameters().First().ParameterType == typeof(FieldInfo) && x.GetGenericArguments().Count() == 2);
                     method = method.MakeGenericMethod(typeof(FieldClass), fields[i].FieldType);
                     var fieldDelegate = method.Invoke(null, new object[] { fields[i] }) as Delegate;
-                    var fieldDefault = fields[i].CustomAttributes.OfType<DefaultValueAttribute>().First().Value;
+                    var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
                     fieldDelegate.DynamicInvoke(fc, Convert.ChangeType(fieldDefault, fields[i].FieldType));
                     fields[i].GetValue(fc).ShouldEqual(fieldDefault);
                 }
             };
 
-            It should_execute_1M_times_in_less_then_1_second = () =>
+            It should_execute_max_3_times_slower_then_direct_call = () =>
             {
                 var fc = new FieldClass();
                 var fd = DynamicMethodGenerator.GenerateInstanceFieldSetter<FieldClass, object>(fields[0]);
-                var fv = fields[0].CustomAttributes.OfType<DefaultValueAttribute>().First().Value;
+                var fv = fields[0].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
                 for (var i = 0; i < 10; i++)
                 {
                     fd(fc, fv);
                 }
 
                 var sw = Stopwatch.StartNew();
-                for (var i = 0; i < 1000000; i++)
-                {
-                    fd(fc, fv);
-                }
+                for (var i = 0; i < 100 * 1000 * 1000; i++) fd(fc, fv);
                 sw.Stop();
-                sw.ElapsedMilliseconds.ShouldBeLessThan(1000);
+                var elapsed = sw.ElapsedMilliseconds;
+
+                sw.Restart();
+                for (var i = 0; i < 100 * 1000 * 1000; i++) fc.pIntField = (int) fv;
+                sw.Stop();
+                var factor = ((float) elapsed/(float) sw.ElapsedMilliseconds);
+
+                Debug.WriteLine("Debug Performance: Reflection = {0} ms, Direct call = {1} ms, Factor = {2}", elapsed, sw.ElapsedMilliseconds, factor);
+                factor.ShouldBeLessThanOrEqualTo(3.0);
             };
 
             private static List<FieldInfo> fields;
