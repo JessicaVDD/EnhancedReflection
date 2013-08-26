@@ -60,7 +60,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DynamicMethodGeneratorSpecs.cs" />
+    <Compile Include="MethodKeySpec.cs" />
     <Compile Include="Person.cs" />
+    <Compile Include="ReflectedInstanceSpec.cs" />
+    <Compile Include="ReflectedTypeSpec.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Willow.Reflection\Willow.Reflection.csproj">

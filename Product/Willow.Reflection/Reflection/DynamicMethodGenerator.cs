@@ -61,7 +61,7 @@ namespace Willow.Reflection
         {
             return GenerateInstanceFieldGetter<TOwner, object>(fld);
         }
-        internal static Func<TOwner, TField> GenerateInstanceFieldGetter<TOwner, TField>(FieldInfo fld)
+        public static Func<TOwner, TField> GenerateInstanceFieldGetter<TOwner, TField>(FieldInfo fld)
         {
             if (fld == null) throw new ArgumentNullException("fld");
             if (fld.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "fld");
@@ -92,7 +92,7 @@ namespace Willow.Reflection
         {
             return GenerateInstancePropertySetter<TOwner, object>(prop);
         }
-        internal static Action<TOwner, TProperty> GenerateInstancePropertySetter<TOwner, TProperty>(PropertyInfo prop)
+        public static Action<TOwner, TProperty> GenerateInstancePropertySetter<TOwner, TProperty>(PropertyInfo prop)
         {
             if (prop == null) throw new ArgumentNullException("prop");
             if (prop.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "prop");
@@ -105,8 +105,8 @@ namespace Willow.Reflection
             var gen = dyn.GetILGenerator();
             gen.Emit(OpCodes.Ldarg_0);
             gen.Emit(OpCodes.Ldarg_1);
-            if (typeof(TProperty) != prop.PropertyType)
-                gen.Emit(OpCodes.Castclass, prop.PropertyType);
+            if (typeof(TProperty) == typeof(object) && prop.PropertyType.IsValueType)
+                gen.Emit(OpCodes.Unbox_Any, prop.PropertyType);
             if (setMethod.IsVirtual)
                 gen.Emit(OpCodes.Callvirt, setMethod);
             else
@@ -129,7 +129,7 @@ namespace Willow.Reflection
         {
             return GenerateInstancePropertyGetter<TOwner, object>(prop);
         }
-        internal static Func<TOwner, TProperty> GenerateInstancePropertyGetter<TOwner, TProperty>(PropertyInfo prop)
+        public static Func<TOwner, TProperty> GenerateInstancePropertyGetter<TOwner, TProperty>(PropertyInfo prop)
         {
             if (prop == null) throw new ArgumentNullException("prop");
             if (prop.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "prop");
@@ -145,7 +145,7 @@ namespace Willow.Reflection
                 gen.Emit(OpCodes.Callvirt, getMethod);
             else
                 gen.Emit(OpCodes.Call, getMethod);
-            if (prop.PropertyType.IsValueType && prop.PropertyType != typeof(TProperty))
+            if (typeof(TProperty) == typeof(object) && prop.PropertyType.IsValueType)
                 gen.Emit(OpCodes.Box, prop.PropertyType);
             gen.Emit(OpCodes.Ret);
             return dyn.CreateDelegate(typeof(Func<TOwner, TProperty>)) as Func<TOwner, TProperty>;
@@ -165,7 +165,7 @@ namespace Willow.Reflection
         {
             return GenerateStaticFieldGetter<TOwner, object>(fld);
         }
-        internal static Func<TField> GenerateStaticFieldGetter<TOwner, TField>(FieldInfo fld)
+        public static Func<TField> GenerateStaticFieldGetter<TOwner, TField>(FieldInfo fld)
         {
             if (fld == null) throw new ArgumentNullException("fld");
             if (fld.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "fld");
@@ -194,7 +194,7 @@ namespace Willow.Reflection
         {
             return GenerateStaticFieldSetter<TOwner, object>(fld);
         }
-        internal static Action<TField> GenerateStaticFieldSetter<TOwner, TField>(FieldInfo fld)
+        public static Action<TField> GenerateStaticFieldSetter<TOwner, TField>(FieldInfo fld)
         {
             if (fld == null) throw new ArgumentNullException("fld");
             if (fld.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "fld");
@@ -224,7 +224,7 @@ namespace Willow.Reflection
         {
             return GenerateStaticPropertyGetter<TOwner, object>(prop);
         }
-        internal static Func<TProperty> GenerateStaticPropertyGetter<TOwner, TProperty>(PropertyInfo prop)
+        public static Func<TProperty> GenerateStaticPropertyGetter<TOwner, TProperty>(PropertyInfo prop)
         {
             if (prop == null) throw new ArgumentNullException("prop");
             if (prop.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "prop");
@@ -259,7 +259,7 @@ namespace Willow.Reflection
         {
             return GenerateStaticPropertySetter<TOwner, object>(prop);
         }
-        internal static Action<TProperty> GenerateStaticPropertySetter<TOwner, TProperty>(PropertyInfo prop)
+        public static Action<TProperty> GenerateStaticPropertySetter<TOwner, TProperty>(PropertyInfo prop)
         {
             if (prop == null) throw new ArgumentNullException("prop");
             if (prop.ReflectedType != typeof(TOwner)) throw new ArgumentException("The reflected type doesn't match the TOwner", "prop");
@@ -290,7 +290,7 @@ namespace Willow.Reflection
         {
             return GenerateInstanceMethod(methodName, typeof (T), owner, argumentParameters) as T;
         }
-        internal static Delegate GenerateInstanceMethod(MethodInfo method, Type delegateType)
+        public static Delegate GenerateInstanceMethod(MethodInfo method, Type delegateType)
         {
             if (method == null) throw new ArgumentNullException("method");
 
@@ -322,7 +322,7 @@ namespace Willow.Reflection
             var staticMethod = owner.GetMethod(methodName, _StaticBinding, null, argumentParameters, null);
             return GenerateStaticMethod<T>(staticMethod);
         }
-        internal static Delegate GenerateStaticMethod(MethodInfo method, Type delegateType)
+        public static Delegate GenerateStaticMethod(MethodInfo method, Type delegateType)
         {
             if (method == null) throw new ArgumentNullException("method");
 

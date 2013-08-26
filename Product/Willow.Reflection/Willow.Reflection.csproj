@@ -65,7 +65,6 @@
     <Compile Include="Reflection\ReflectedType.cs" />
     <Compile Include="Reflection\DynamicMethodGenerator.cs" />
     <Compile Include="Reflection\InstanceReflectionWrapper.cs" />
-    <Compile Include="Reflection\TypeReflectionCache.cs" />
     <Compile Include="Reflection\StaticReflectionWrapper.cs" />
     <Compile Include="TestClass.cs" />
   </ItemGroup>
