@@ -34,7 +34,6 @@
 
         public static GetterSetter<TOwner> Create<TOwner>(GetterSetterAccessor<TOwner> accessor) { return new GetterSetter<TOwner>(default(TOwner), accessor); }
         public static GetterSetter<TOwner, TField> Create<TOwner, TField>(GetterSetterAccessor<TOwner, TField> accessor) { return new GetterSetter<TOwner, TField>(default(TOwner), accessor); }
-
     }
 
 }

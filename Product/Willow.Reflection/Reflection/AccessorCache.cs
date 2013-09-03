@@ -108,13 +108,19 @@ namespace Willow.Reflection
     {
         protected override Func<TOwner, TField> CreateGetter<TField>(string name)
         {
-            var helper = new GetterHelper<TField>(DynamicMethodGenerator.GenerateStaticFieldGetter<TOwner, TField>(name));
+            var del = DynamicMethodGenerator.GenerateStaticFieldGetter<TOwner, TField>(name);
+            if (del == null) return null;
+
+            var helper = new GetterHelper<TField>(del);
             return helper.CreateGetter;
         }
 
         protected override Action<TOwner, TField> CreateSetter<TField>(string name)
         {
-            var helper = new SetterHelper<TField>(DynamicMethodGenerator.GenerateStaticFieldSetter<TOwner, TField>(name));
+            var del = DynamicMethodGenerator.GenerateStaticFieldSetter<TOwner, TField>(name);
+            if (del == null) return null;
+
+            var helper = new SetterHelper<TField>(del);
             return helper.CreateSetter;
         }
     }
@@ -123,13 +129,19 @@ namespace Willow.Reflection
     {
         protected override Func<TOwner, TProp> CreateGetter<TProp>(string name)
         {
-            var helper = new GetterHelper<TProp>(DynamicMethodGenerator.GenerateStaticPropertyGetter<TOwner, TProp>(name));
+            var del = DynamicMethodGenerator.GenerateStaticPropertyGetter<TOwner, TProp>(name);
+            if (del == null) return null;
+
+            var helper = new GetterHelper<TProp>(del);
             return helper.CreateGetter;
         }
 
         protected override Action<TOwner, TProp> CreateSetter<TProp>(string name)
         {
-            var helper = new SetterHelper<TProp>(DynamicMethodGenerator.GenerateStaticPropertySetter<TOwner, TProp>(name));
+            var del = DynamicMethodGenerator.GenerateStaticPropertySetter<TOwner, TProp>(name);
+            if (del == null) return null;
+
+            var helper = new SetterHelper<TProp>(del);
             return helper.CreateSetter;
         }
     }

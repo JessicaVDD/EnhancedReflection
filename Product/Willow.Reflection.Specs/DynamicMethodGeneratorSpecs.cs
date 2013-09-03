@@ -26,6 +26,18 @@ namespace Willow.Reflection.Specs
                 var fc = new FieldClass();
                 for (var i = 0; i < fields.Count; i++)
                 {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateInstanceFieldSetter<object, object>(fields[i]);
+                    var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    fieldDelegate(fc, fieldDefault);
+                    fields[i].GetValue(fc).ShouldEqual(fieldDefault);
+                }
+            };
+
+            It should_return_a_valid_delegate_when_working_with_untyped_field = () =>
+            {
+                var fc = new FieldClass();
+                for (var i = 0; i < fields.Count; i++)
+                {
                     var fieldDelegate = DynamicMethodGenerator.GenerateInstanceFieldSetter<FieldClass, object>(fields[i]);
                     var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
                     fieldDelegate(fc, fieldDefault);
@@ -83,6 +95,18 @@ namespace Willow.Reflection.Specs
             };
 
             It should_return_a_valid_delegate_when_working_untyped = () =>
+            {
+                var fc = new FieldClass();
+                for (var i = 0; i < fields.Count; i++)
+                {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateInstanceFieldGetter<object, object>(fields[i]);
+                    var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    fields[i].SetValue(fc, fieldDefault);
+                    fieldDelegate(fc).ShouldEqual(fieldDefault);
+                }
+            };
+
+            It should_return_a_valid_delegate_when_working_with_untyped_field = () =>
             {
                 var fc = new FieldClass();
                 for (var i = 0; i < fields.Count; i++)
@@ -148,6 +172,18 @@ namespace Willow.Reflection.Specs
                 var fc = new PropertyClass();
                 for (var i = 0; i < props.Count; i++)
                 {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateInstancePropertySetter<object, object>(props[i]);
+                    var fieldDefault = props[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    fieldDelegate(fc, fieldDefault);
+                    props[i].GetGetMethod(true).Invoke(fc, null).ShouldEqual(fieldDefault);
+                }
+            };
+
+            It should_return_a_valid_delegate_when_working_with_untyped_property = () =>
+            {
+                var fc = new PropertyClass();
+                for (var i = 0; i < props.Count; i++)
+                {
                     var fieldDelegate = DynamicMethodGenerator.GenerateInstancePropertySetter<PropertyClass, object>(props[i]);
                     var fieldDefault = props[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
                     fieldDelegate(fc, fieldDefault);
@@ -205,6 +241,18 @@ namespace Willow.Reflection.Specs
             };
 
             It should_return_a_valid_delegate_when_working_untyped = () =>
+            {
+                var fc = new PropertyClass();
+                for (var i = 0; i < props.Count; i++)
+                {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateInstancePropertyGetter<object, object>(props[i]);
+                    var fieldDefault = props[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    props[i].GetSetMethod(true).Invoke(fc, new object[] { fieldDefault });
+                    fieldDelegate(fc).ShouldEqual(fieldDefault);
+                }
+            };
+
+            It should_return_a_valid_delegate_when_working_with_untyped_property = () =>
             {
                 var fc = new PropertyClass();
                 for (var i = 0; i < props.Count; i++)
@@ -269,6 +317,17 @@ namespace Willow.Reflection.Specs
             {
                 for (var i = 0; i < fields.Count; i++)
                 {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateStaticFieldSetter<object, object>(fields[i]);
+                    var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    fieldDelegate(fieldDefault);
+                    fields[i].GetValue(null).ShouldEqual(fieldDefault);
+                }
+            };
+
+            It should_return_a_valid_delegate_when_working_with_untyped_field = () =>
+            {
+                for (var i = 0; i < fields.Count; i++)
+                {
                     var fieldDelegate = DynamicMethodGenerator.GenerateStaticFieldSetter<StaticFieldClass, object>(fields[i]);
                     var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
                     fieldDelegate(fieldDefault);
@@ -324,6 +383,17 @@ namespace Willow.Reflection.Specs
             };
 
             It should_return_a_valid_delegate_when_working_untyped = () =>
+            {
+                for (var i = 0; i < fields.Count; i++)
+                {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateStaticFieldGetter<object, object>(fields[i]);
+                    var fieldDefault = fields[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    fields[i].SetValue(null, fieldDefault);
+                    fieldDelegate().ShouldEqual(fieldDefault);
+                }
+            };
+
+            It should_return_a_valid_delegate_when_working_with_untyped_field = () =>
             {
                 for (var i = 0; i < fields.Count; i++)
                 {
@@ -385,6 +455,17 @@ namespace Willow.Reflection.Specs
             {
                 for (var i = 0; i < props.Count; i++)
                 {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateStaticPropertySetter<object, object>(props[i]);
+                    var fieldDefault = props[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    fieldDelegate(fieldDefault);
+                    props[i].GetGetMethod(true).Invoke(null, null).ShouldEqual(fieldDefault);
+                }
+            };
+
+            It should_return_a_valid_delegate_when_working_with_untyped_property = () =>
+            {
+                for (var i = 0; i < props.Count; i++)
+                {
                     var fieldDelegate = DynamicMethodGenerator.GenerateStaticPropertySetter<StaticPropertyClass, object>(props[i]);
                     var fieldDefault = props[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
                     fieldDelegate(fieldDefault);
@@ -440,6 +521,18 @@ namespace Willow.Reflection.Specs
             };
 
             It should_return_a_valid_delegate_when_working_untyped = () =>
+            {
+                for (var i = 0; i < props.Count; i++)
+                {
+                    var fieldDelegate = DynamicMethodGenerator.GenerateStaticPropertyGetter<object, object>(props[i]);
+                    var fieldDefault = props[i].GetCustomAttributes(typeof(DefaultValueAttribute)).OfType<DefaultValueAttribute>().First().Value;
+                    props[i].GetSetMethod(true).Invoke(null, new object[] { fieldDefault });
+                    fieldDelegate().ShouldEqual(fieldDefault);
+                }
+            };
+
+
+            It should_return_a_valid_delegate_when_working_with_untyped_property = () =>
             {
                 for (var i = 0; i < props.Count; i++)
                 {

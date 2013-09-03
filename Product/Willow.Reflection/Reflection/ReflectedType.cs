@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Willow.Reflection
 {
@@ -24,6 +25,28 @@ namespace Willow.Reflection
         public Delegate Method(string method, Type returnValueType, params Type[] args)
         {
             return _StaticMethodCache.GetAccessor(method, returnValueType, args);
+        }
+    }
+
+    public class ReflectedType
+    {
+        private static readonly Dictionary<Type, IAccessorCache<object>> _StaticFieldCacheDictionary = new Dictionary<Type, IAccessorCache<object>>();
+
+        private readonly IAccessorCache<object> _StaticFieldCache;
+        public ReflectedType(Type ownerType)
+        {
+            IAccessorCache<object> result;
+            if (_StaticFieldCacheDictionary.TryGetValue(ownerType, out result))
+                _StaticFieldCache = result;
+            else
+            {
+                _StaticFieldCache = new StaticFieldAccessorCache<object>();
+            }
+        }
+
+        public GetterSetter<object> Fields(string name)
+        {
+            return GetterSetter.Create(_StaticFieldCache.GetAccessor(name));
         }
     }
 }
