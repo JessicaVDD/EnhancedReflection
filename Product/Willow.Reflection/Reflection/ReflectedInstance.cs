@@ -7,17 +7,19 @@ namespace Willow.Reflection
         private readonly TOwner _Owner;
         private readonly ReflectedType<TOwner> _OwnerReflectedType;
 
-        private readonly AccessorCache<TOwner> _FieldCache;
-        private readonly AccessorCache<TOwner> _PropertyCache;
-        private readonly MethodCache<TOwner> _MethodCache;
+        private readonly IAccessorCache<TOwner> _FieldCache;
+        private readonly IAccessorCache<TOwner> _PropertyCache;
+        private readonly IMethodCache<TOwner> _MethodCache;
         
-        public ReflectedInstance(TOwner owner)
+        public ReflectedInstance(TOwner owner) : this(owner, new ReflectedType<TOwner>(), ReflectedType<TOwner>.FieldCache, ReflectedType<TOwner>.PropertyCache, ReflectedType<TOwner>.MethodCache) { }
+
+        public ReflectedInstance(TOwner owner, ReflectedType<TOwner> staticType, IAccessorCache<TOwner> fields, IAccessorCache<TOwner> properties, IMethodCache<TOwner> methods)
         {
             this._Owner = owner;
-            this._OwnerReflectedType = new ReflectedType<TOwner>();
-            this._FieldCache = ReflectedType<TOwner>.FieldCache;
-            this._PropertyCache = ReflectedType<TOwner>.PropertyCache;
-            this._MethodCache = ReflectedType<TOwner>.MethodCache;
+            this._OwnerReflectedType = staticType;
+            this._FieldCache = fields;
+            this._PropertyCache = properties;
+            this._MethodCache = methods;
         }
 
         public ReflectedType<TOwner> Static { get { return this._OwnerReflectedType; } }

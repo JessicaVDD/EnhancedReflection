@@ -5,7 +5,13 @@ using System.Linq.Expressions;
 
 namespace Willow.Reflection
 {
-    public abstract class AccessorCache<TOwner>
+    public interface IAccessorCache<TOwner>
+    {
+        GetterSetterAccessor<TOwner> GetAccessor(string name);
+        GetterSetterAccessor<TOwner, TField> GetAccessor<TField>(string name);
+    }
+
+    public abstract class AccessorCache<TOwner> : IAccessorCache<TOwner>
     {
         private readonly Dictionary<string, GetterSetterAccessor<TOwner>> _Fields = new Dictionary<string, GetterSetterAccessor<TOwner>>();
         private readonly Dictionary<string, object> _TypedFields = new Dictionary<string, object>();

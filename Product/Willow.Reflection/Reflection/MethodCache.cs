@@ -5,7 +5,13 @@ using System.Linq.Expressions;
 
 namespace Willow.Reflection
 {
-    public abstract class MethodCache<TOwner>
+    public interface IMethodCache<TOwner>
+    {
+        Delegate GetAccessor(string method, Type returnValueType, params Type[] args);
+        T GetAccessor<T>(string method) where T : class;
+    }
+
+    public abstract class MethodCache<TOwner> : IMethodCache<TOwner>
     {
         private readonly Dictionary<MethodKey, Delegate> _Methods = new Dictionary<MethodKey, Delegate>();
         public Delegate GetAccessor(string method, Type returnValueType, params Type[] args)

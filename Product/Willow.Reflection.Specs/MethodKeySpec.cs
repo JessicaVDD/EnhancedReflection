@@ -34,8 +34,10 @@ namespace Willow.Reflection.Specs
             };
             
             It should_equal_to_a_methodkey_created_with_the_same_input = () => 
-            { 
-                sut.ShouldEqual(new MethodKey(new string(aString.ToCharArray()), aReturnType, firstType, secondType)); 
+            {
+                var secondKey = new MethodKey(new string(aString.ToCharArray()), aReturnType, firstType, secondType);
+                ReferenceEquals(sut, secondKey).ShouldBeFalse();
+                sut.ShouldEqual(secondKey); 
             };
 
             It should_have_same_hash_to_a_methodkey_created_with_the_same_input = () => 
