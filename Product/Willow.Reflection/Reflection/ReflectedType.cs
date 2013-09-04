@@ -31,8 +31,10 @@ namespace Willow.Reflection
     public class ReflectedType
     {
         private static readonly Dictionary<Type, IAccessorCache<object>> _StaticFieldCacheDictionary = new Dictionary<Type, IAccessorCache<object>>();
+        private static readonly Dictionary<Type, IAccessorCache<object>> _StaticPropertyCacheDictionary = new Dictionary<Type, IAccessorCache<object>>();
 
         private readonly IAccessorCache<object> _StaticFieldCache;
+        private readonly IAccessorCache<object> _StaticPropertyCache;
         public ReflectedType(Type ownerType)
         {
             IAccessorCache<object> result;
@@ -40,13 +42,19 @@ namespace Willow.Reflection
                 _StaticFieldCache = result;
             else
             {
-                _StaticFieldCache = new StaticFieldAccessorCache<object>();
+                _StaticFieldCache = new StaticFieldAccessorCache(ownerType);
+            }
+
+            if (_StaticFieldCacheDictionary.TryGetValue(ownerType, out result))
+                _StaticPropertyCache = result;
+            else
+            {
+                _StaticPropertyCache = new StaticPropertyAccessorCache(ownerType);
             }
         }
 
-        public GetterSetter<object> Fields(string name)
-        {
-            return GetterSetter.Create(_StaticFieldCache.GetAccessor(name));
-        }
+        public GetterSetter<object> Fields(string name) { return GetterSetter.Create(_StaticFieldCache.GetAccessor(name)); }
+        public GetterSetter<object> Properties(string name) { return GetterSetter.Create(_StaticPropertyCache.GetAccessor(name)); }
+
     }
 }
