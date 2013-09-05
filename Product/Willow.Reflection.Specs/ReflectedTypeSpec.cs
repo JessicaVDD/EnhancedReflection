@@ -1,4 +1,5 @@
-﻿using Machine.Specifications;
+﻿using System.Collections;
+using Machine.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,88 +16,165 @@ namespace Willow.Reflection.Specs
 {
     class ReflectedTypeSpec
     {
-        [Subject(typeof(ReflectedType<Person>), "Reflection")]
-        public class when_accessing_a_field : Observes<ReflectedType<Person>>
+        public class concern<T> : Observes<T> where T : class
         {
+            public static object get_a_value(FieldInfo fi)
+            {
+                return typeof(ClassValues).GetField(fi.Name).GetValue(null);
+            }
+            public static object get_a_value(PropertyInfo pi)
+            {
+                return typeof(ClassValues).GetField(pi.Name).GetValue(null);
+            }
+            public static object get_a_value(string name)
+            {
+                return typeof(ClassValues).GetField(name).GetValue(null);
+            }
+        }
+
+        [Subject(typeof(ReflectedType<Person>), "Reflection")]
+        public class when_accessing_a_field : concern<ReflectedType<StaticFieldClass>>
+        {
+            private static void test_accessor<T>(string fieldname)
+            {
+                var a = sut.Fields<T>(fieldname);
+                a.ShouldNotBeNull();
+                a.Accessor.ShouldNotBeNull();
+                a.Accessor.Get.ShouldNotBeNull();
+                a.Accessor.Set.ShouldNotBeNull();
+            }
+
+            private Establish e = () =>
+            {
+                validFieldnames = typeof(StaticFieldClass).GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Select(x => x.Name).ToArray();
+                validFieldname = "_intField";
+                invalidFieldname = "unknown";
+                aValue = fake.a_value<int>();
+            };
+
             Because context = () => 
             {
-                typedResult = sut.Fields<long>("_LastId");
-                result = sut.Fields("_LastId");
-                invalidTypedResult = sut.Fields<long>("unknown");
-                invalidResult = sut.Fields("unknown");
+                typedResult = sut.Fields<int>(validFieldname);
+                result = sut.Fields(validFieldname);
+                invalidTypedResult = sut.Fields<int>(invalidFieldname);
+                invalidResult = sut.Fields(invalidFieldname);
             };
 
-            It should_return_a_getter_setter_for_a_valid_field = () => 
+
+            It should_return_a_valid_getter_setter_for_a_valid_field = () => 
             {
-                result.Accessor.Get.ShouldNotBeNull();
-                result.Accessor.Set.ShouldNotBeNull();
-                typedResult.Accessor.Get.ShouldNotBeNull();
-                typedResult.Accessor.Set.ShouldNotBeNull();
+                foreach (var fieldname in validFieldnames)
+                {
+                    var res = sut.Fields(fieldname);
+                    res.Accessor.ShouldNotBeNull();
+                    res.ShouldNotBeNull();
+                    res.Accessor.Get.ShouldNotBeNull();
+                    res.Accessor.Set.ShouldNotBeNull();
+                }
+
+                test_accessor<int>("_int");
+                test_accessor<string>("_string");
+                test_accessor<DateTime>("_date");
+                test_accessor<Action>("_action");
+                test_accessor<object>("_object");
+                test_accessor<ArrayList>("_arrayList");
+                test_accessor<int>("pInt");
+                test_accessor<string>("pString");
+                test_accessor<DateTime>("pDate");
+                test_accessor<Action>("pAction");
+                test_accessor<object>("pObject");
+                test_accessor<ArrayList>("pArrayList");
             };
 
-            It should_return_null_getter_and_setter_for_an_invalid_field = () =>
+            It should_return_null_for_an_invalid_field = () =>
             {
-                invalidResult.Accessor.Get.ShouldBeNull();
-                invalidResult.Accessor.Set.ShouldBeNull();
-                invalidTypedResult.Accessor.Get.ShouldBeNull();
-                invalidTypedResult.Accessor.Set.ShouldBeNull();
+                invalidResult.ShouldBeNull();
+                invalidTypedResult.ShouldBeNull();
             };
 
             It should_retrieve_the_accessor_from_the_cache_after_first_retrieve = () =>
             {
                 //If the accessor comes from the cache, the reference is the same
-                ReferenceEquals(sut.Fields<long>("_LastId").Accessor, typedResult.Accessor).ShouldBeTrue();
-                ReferenceEquals(sut.Fields("_LastId").Accessor, result.Accessor).ShouldBeTrue();
-                ReferenceEquals(sut.Fields<long>("unknown").Accessor, invalidTypedResult.Accessor).ShouldBeTrue();
-                ReferenceEquals(sut.Fields("unknown").Accessor, invalidResult.Accessor).ShouldBeTrue();
+                ReferenceEquals(sut.Fields<int>(validFieldname).Accessor, typedResult.Accessor).ShouldBeTrue();
+                ReferenceEquals(sut.Fields(validFieldname).Accessor, result.Accessor).ShouldBeTrue();
 
                 //Check if the accessor comes from the correct cache
-                ReferenceEquals(sut.Fields<long>("_LastId").Accessor, result.Accessor).ShouldBeFalse();
-                ReferenceEquals(sut.Fields("_LastId").Accessor, typedResult.Accessor).ShouldBeFalse();
-                ReferenceEquals(sut.Fields<long>("unknown").Accessor, invalidResult.Accessor).ShouldBeFalse();
-                ReferenceEquals(sut.Fields("unknown").Accessor, invalidTypedResult.Accessor).ShouldBeFalse();
+                ReferenceEquals(sut.Fields<int>(validFieldname).Accessor, result.Accessor).ShouldBeFalse();
+                ReferenceEquals(sut.Fields(validFieldname).Accessor, typedResult.Accessor).ShouldBeFalse();
             };
 
-            private static GetterSetter<Person, long> typedResult;
-            private static GetterSetter<Person> result;
-            private static GetterSetter<Person, long> invalidTypedResult;
-            private static GetterSetter<Person> invalidResult;
+            private It should_correctly_get_and_set_a_value = () =>
+            {
+                sut.Fields<int>(validFieldname).Value = aValue;
+                sut.Fields<int>(validFieldname).Value.ShouldEqual(aValue);
+
+                sut.Fields(validFieldname).Value = aValue;
+                sut.Fields(validFieldname).Value.ShouldEqual(aValue);
+            };
+
+            private static GetterSetter<StaticFieldClass, int> typedResult;
+            private static GetterSetter<StaticFieldClass> result;
+            private static GetterSetter<StaticFieldClass, int> invalidTypedResult;
+            private static GetterSetter<StaticFieldClass> invalidResult;
+            private static int aValue;
+            private static string validFieldname;
+            private static string invalidFieldname;
+            private static string[] validFieldnames;
         }
 
-        public class when_accessing_a_field_of_an_unknown_type : Observes<ReflectedType>
+        public class when_accessing_a_field_of_an_unknown_type : concern<ReflectedType>
         {
             Establish e = () =>
             {
-                sut_factory.create_using(() => new ReflectedType(typeof(Person)));
+                validFieldnames = typeof (StaticFieldClass).GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Select(x => x.Name).ToArray();
+                invalidFieldname = "unknown";
+                sut_factory.create_using(() => new ReflectedType(typeof(StaticFieldClass)));
             };
 
             Because context = () =>
             {
-                result = sut.Fields("_LastId");
-                invalidResult = sut.Fields("unknown");
+                invalidResult = sut.Fields(invalidFieldname);
             };
 
-            It should_return_a_getter_setter_for_a_valid_field = () =>
+            It should_return_a_valid_getter_setter_for_a_valid_field = () =>
             {
-                result.ShouldNotBeNull();
-                result.Accessor.Get.ShouldNotBeNull();
-                result.Accessor.Set.ShouldNotBeNull();
+                foreach (var fieldname in validFieldnames)
+                {
+                    var res = sut.Fields(fieldname);
+                    res.Accessor.ShouldNotBeNull();
+                    res.ShouldNotBeNull();
+                    res.Accessor.Get.ShouldNotBeNull();
+                    res.Accessor.Set.ShouldNotBeNull();
+                }
             };
             
-            It should_return_null_getter_and_setter_for_an_invalid_field = () =>
+            It should_return_null_for_an_invalid_field = () =>
             {
-                result.Accessor.Get.ShouldBeNull();
-                result.Accessor.Set.ShouldBeNull();
+                invalidResult.ShouldBeNull();
             };
 
             It should_retrieve_the_accessor_from_the_cache_after_first_retrieve = () =>
             {
-                ReferenceEquals(sut.Fields("_LastId").Accessor, result.Accessor).ShouldBeTrue();
-                ReferenceEquals(sut.Fields("unknown").Accessor, invalidResult.Accessor).ShouldBeFalse();
+                foreach (var fieldname in validFieldnames)
+                {
+                    var res = sut.Fields(fieldname);
+                    ReferenceEquals(sut.Fields(fieldname).Accessor, res.Accessor).ShouldBeTrue();                    
+                }
             };
 
-            private static GetterSetter<object> result;
-            private static GetterSetter<object> invalidResult;
+            private It should_correctly_get_and_set_a_value = () =>
+            {
+                foreach (var fieldname in validFieldnames)
+                {
+                    var aValue = get_a_value(fieldname);
+                    sut.Fields(fieldname).Value = aValue;
+                    sut.Fields(fieldname).Value.ShouldEqual(aValue);                    
+                }
+            };
+
+            private static GetterSetter invalidResult;
+            private static string invalidFieldname;
+            private static string[] validFieldnames;
         }
     }
 }

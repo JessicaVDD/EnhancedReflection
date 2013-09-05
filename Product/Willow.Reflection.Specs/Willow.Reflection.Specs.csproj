@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DynamicMethodGeneratorSpecs.cs" />
+    <Compile Include="Helpers.cs" />
     <Compile Include="MethodKeySpec.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="ReflectedInstanceSpec.cs" />

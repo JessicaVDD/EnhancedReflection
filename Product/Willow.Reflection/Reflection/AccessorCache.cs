@@ -1,16 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 
 namespace Willow.Reflection
 {
+    public interface IAccessorCache
+    {
+        GetterSetterAccessor GetAccessor(string name);        
+    }
     public interface IAccessorCache<TOwner>
     {
         GetterSetterAccessor<TOwner> GetAccessor(string name);
         GetterSetterAccessor<TOwner, TField> GetAccessor<TField>(string name);
     }
 
+    public abstract class AccessorCache : IAccessorCache
+    {
+        protected readonly Type OwnerType;
+        private readonly Dictionary<string, GetterSetterAccessor> _Fields = new Dictionary<string, GetterSetterAccessor>();
+
+        protected AccessorCache(Type ownerType)
+        {
+            this.OwnerType = ownerType;
+        }
+
+        protected abstract Func<object, object> CreateGetter(string name);
+        protected abstract Action<object, object> CreateSetter(string name);
+
+        public GetterSetterAccessor GetAccessor(string name)
+        {
+            GetterSetterAccessor gsa;
+            if (this._Fields.TryGetValue(name, out gsa)) return gsa;
+
+            var getMethod = this.CreateGetter(name);
+            var setMethod = this.CreateSetter(name);
+
+            gsa = new GetterSetterAccessor(getMethod, setMethod);
+            if (!gsa.IsValid) gsa = null;
+
+            this._Fields.Add(name, gsa);
+            return gsa;
+        }
+    }
     public abstract class AccessorCache<TOwner> : IAccessorCache<TOwner>
     {
         private readonly Dictionary<string, GetterSetterAccessor<TOwner>> _Fields = new Dictionary<string, GetterSetterAccessor<TOwner>>();
@@ -28,12 +58,15 @@ namespace Willow.Reflection
             var setMethod = this.CreateSetter<object>(name);
 
             gsa = new GetterSetterAccessor<TOwner>(getMethod, setMethod);
+            if (!gsa.IsValid) gsa = null;
+
             this._Fields.Add(name, gsa);
             return gsa;
         }
 
         public GetterSetterAccessor<TOwner, TField> GetAccessor<TField>(string name)
         {
+            //Use object, the delegate type is correct but different for each field
             object gsaObject;
             if (this._TypedFields.TryGetValue(name, out gsaObject)) return (GetterSetterAccessor<TOwner, TField>) gsaObject;
 
@@ -41,12 +74,46 @@ namespace Willow.Reflection
             var setMethod = this.CreateSetter<TField>(name);
 
             var gsa = new GetterSetterAccessor<TOwner, TField>(getMethod, setMethod);
+            if (!gsa.IsValid) gsa = null;
+
             this._TypedFields.Add(name, gsa);
             return gsa;
         }
 
     }
 
+    public abstract class StaticAccessorCache : AccessorCache
+    {
+        protected StaticAccessorCache(Type ownerType) : base(ownerType) { }
+
+        protected class SetterHelper
+        {
+            private readonly Action<object> _SetterHelper;
+            public SetterHelper(Action<object> setterHelper)
+            {
+                this._SetterHelper = setterHelper;
+            }
+
+            public void CreateSetter(object owner, object prop)
+            {
+                this._SetterHelper(prop);
+            }
+        }
+
+        protected class GetterHelper
+        {
+            private readonly Func<object> _GetterHelper;
+            public GetterHelper(Func<object> getterHelper)
+            {
+                this._GetterHelper = getterHelper;
+            }
+
+            public object CreateGetter(object owner)
+            {
+                return this._GetterHelper();
+            }
+        }
+    }
     public abstract class StaticAccessorCache<TOwner> : AccessorCache<TOwner>
     {
         protected class SetterHelper<T>
@@ -78,37 +145,20 @@ namespace Willow.Reflection
         }
     }
 
-    public abstract class StaticAccessorCache : AccessorCache<object>
+    public class FieldAccessorCache : AccessorCache
     {
-        protected class SetterHelper<T>
-        {
-            private readonly Action<T> _SetterHelper;
-            public SetterHelper(Action<T> setterHelper)
-            {
-                this._SetterHelper = setterHelper;
-            }
+        public FieldAccessorCache(Type ownerType) : base(ownerType) { }
 
-            public void CreateSetter(object owner, T prop)
-            {
-                this._SetterHelper(prop);
-            }
+        protected override Func<object, object> CreateGetter(string name)
+        {
+            return DynamicMethodGenerator.GenerateInstanceFieldGetter(OwnerType, name);
         }
 
-        protected class GetterHelper<T>
+        protected override Action<object, object> CreateSetter(string name)
         {
-            private readonly Func<T> _GetterHelper;
-            public GetterHelper(Func<T> getterHelper)
-            {
-                this._GetterHelper = getterHelper;
-            }
-
-            public T CreateGetter(object owner)
-            {
-                return this._GetterHelper();
-            }
+            return DynamicMethodGenerator.GenerateInstanceFieldSetter(OwnerType, name);
         }
     }
-
     public class FieldAccessorCache<TOwner> : AccessorCache<TOwner>
     {
         protected override Func<TOwner, TField> CreateGetter<TField>(string name)
@@ -122,6 +172,20 @@ namespace Willow.Reflection
         }
     }
 
+    public class PropertyAccessorCache : AccessorCache
+    {
+        public PropertyAccessorCache(Type ownerType) : base(ownerType) { }
+
+        protected override Func<object, object> CreateGetter(string name)
+        {
+            return DynamicMethodGenerator.GenerateInstancePropertyGetter(OwnerType, name);
+        }
+
+        protected override Action<object, object> CreateSetter(string name)
+        {
+            return DynamicMethodGenerator.GenerateInstancePropertySetter(OwnerType, name);
+        }
+    }
     public class PropertyAccessorCache<TOwner> : AccessorCache<TOwner>
     {
         protected override Func<TOwner, TProp> CreateGetter<TProp>(string name)
@@ -135,6 +199,29 @@ namespace Willow.Reflection
         }
     }
 
+    public class StaticFieldAccessorCache : StaticAccessorCache
+    {
+        public StaticFieldAccessorCache(Type ownerType) : base(ownerType) { }
+
+        protected override Func<object, object> CreateGetter(string name)
+        {
+            var del = DynamicMethodGenerator.GenerateStaticFieldGetter(OwnerType, name);
+            if (del == null) return null;
+
+            var helper = new GetterHelper(del);
+            return helper.CreateGetter;
+        }
+
+        protected override Action<object, object> CreateSetter(string name)
+        {
+
+            var del = DynamicMethodGenerator.GenerateStaticFieldSetter(OwnerType, name);
+            if (del == null) return null;
+
+            var helper = new SetterHelper(del);
+            return helper.CreateSetter;
+        }
+    }
     public class StaticFieldAccessorCache<TOwner> : StaticAccessorCache<TOwner>
     {
         protected override Func<TOwner, TField> CreateGetter<TField>(string name)
@@ -156,43 +243,28 @@ namespace Willow.Reflection
         }
     }
 
-    public class StaticFieldAccessorCache : StaticAccessorCache
+    public class StaticPropertyAccessorCache : StaticAccessorCache
     {
-        private readonly Type _OwnerType;
-        public StaticFieldAccessorCache(Type ownerType)
-        {
-            _OwnerType = ownerType;
-        }
-        protected override Func<object, TField> CreateGetter<TField>(string name)
-        {
-            return (Func<object, TField>)(object)CreateGetter(name);
-        }
+        public StaticPropertyAccessorCache(Type ownerType) : base(ownerType) { }
 
-        protected Func<object, object> CreateGetter(string name) 
+        protected override Func<object, object> CreateGetter(string name)
         {
-            var del = DynamicMethodGenerator.GenerateStaticFieldGetter(_OwnerType, name);
+            var del = DynamicMethodGenerator.GenerateStaticPropertyGetter(OwnerType, name);
             if (del == null) return null;
 
-            var helper = new GetterHelper<object>(del);
+            var helper = new GetterHelper(del);
             return helper.CreateGetter;
         }
 
-        protected override Action<object, TField> CreateSetter<TField>(string name)
+        protected override Action<object, object> CreateSetter(string name)
         {
-            return (Action<object, TField>)(object)CreateSetter(name);
-        }
-
-        protected Action<object, object> CreateSetter(string name)
-        {
-
-            var del = DynamicMethodGenerator.GenerateStaticFieldSetter(_OwnerType, name);
+            var del = DynamicMethodGenerator.GenerateStaticPropertySetter(OwnerType, name);
             if (del == null) return null;
 
-            var helper = new SetterHelper<object>(del);
+            var helper = new SetterHelper(del);
             return helper.CreateSetter;
         }
     }
-
     public class StaticPropertyAccessorCache<TOwner> : StaticAccessorCache<TOwner>
     {
         protected override Func<TOwner, TProp> CreateGetter<TProp>(string name)
@@ -214,40 +286,5 @@ namespace Willow.Reflection
         }
     }
 
-    public class StaticPropertyAccessorCache : StaticAccessorCache
-    {
-        private readonly Type _OwnerType;
-        public StaticPropertyAccessorCache(Type ownerType)
-        {
-            _OwnerType = ownerType;
-        }
-        protected override Func<object, TProp> CreateGetter<TProp>(string name)
-        {
-            return (Func<object, TProp>) (object) CreateGetter(name);
-        }
-
-        protected Func<object, object> CreateGetter(string name)
-        {
-            var del = DynamicMethodGenerator.GenerateStaticPropertyGetter(_OwnerType, name);
-            if (del == null) return null;
-
-            var helper = new GetterHelper<object>(del);
-            return helper.CreateGetter;
-        }
-
-        protected override Action<object, TProp> CreateSetter<TProp>(string name)
-        {
-            return (Action<object, TProp>)(object)CreateSetter(name);
-        }
-
-        protected Action<object, object> CreateSetter(string name)
-        {
-            var del = DynamicMethodGenerator.GenerateStaticPropertySetter(_OwnerType, name);
-            if (del == null) return null;
-
-            var helper = new SetterHelper<object>(del);
-            return helper.CreateSetter;
-        }
-    }
 
 }
