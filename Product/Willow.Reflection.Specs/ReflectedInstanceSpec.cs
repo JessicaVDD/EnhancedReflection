@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -373,6 +374,32 @@ namespace Willow.Reflection.Specs
                     sut.Properties(propname).Value = aValue;
                     sut.Properties(propname).Value.ShouldEqual(aValue);
                 }
+            };
+
+            It should_set_a_value_max_3_times_slower_then_direct_call = () =>
+            {
+                var fc = new PropertyClass();
+                var propname = "pInt";
+                var fv = (int)get_a_value(propname);
+                fc.pInt = fv;
+
+                sut.Properties(propname).Value = fv;
+
+                for (var i = 0; i < 10; i++) sut.Properties(propname).Value = fv;
+
+                var sw = Stopwatch.StartNew();
+                for (var i = 0; i < 10 * 1000 * 1000; i++) sut.Properties(propname).Value = fv;
+                sw.Stop();
+                var elapsed = sw.ElapsedMilliseconds;
+
+                fc.pInt = (int)fv;
+                sw.Restart();
+                for (var i = 0; i < 10 * 1000 * 1000; i++) fc.pInt = fv;
+                sw.Stop();
+                var factor = ((float)elapsed / (float)sw.ElapsedMilliseconds);
+
+                Debug.WriteLine("Debug Performance: Reflection = {0} ms, Direct call = {1} ms, Factor = {2}", elapsed, sw.ElapsedMilliseconds, factor);
+                factor.ShouldBeLessThanOrEqualTo(3.0);
             };
 
             private static GetterSetter invalidResult;

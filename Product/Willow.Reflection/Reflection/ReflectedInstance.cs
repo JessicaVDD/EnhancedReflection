@@ -21,8 +21,7 @@ namespace Willow.Reflection
         public GetterSetter Fields(string name) { return GetterSetter.Create(this._Owner, this._Cache.Fields.GetAccessor(name)); }
         public GetterSetter Properties(string name) { return GetterSetter.Create(this._Owner, this._Cache.Properties.GetAccessor(name)); }
 
-        //public T Method<T>(string method) where T : class { return _Cache.Methods.GetAccessor<T>(method); }
-        //public Delegate Method(string method, Type returnValueType, params Type[] args) { return _Cache.Methods.GetAccessor(method, returnValueType, args); }
+        public Delegate Method(string method, Type returnValueType, params Type[] args) { return _Cache.Methods.GetAccessor(method, returnValueType, args); }
     }
 
     public class ReflectedInstance<TOwner>

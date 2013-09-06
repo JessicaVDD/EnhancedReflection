@@ -285,6 +285,4 @@ namespace Willow.Reflection
             return helper.CreateSetter;
         }
     }
-
-
 }

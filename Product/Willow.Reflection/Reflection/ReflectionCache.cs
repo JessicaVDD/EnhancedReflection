@@ -9,8 +9,8 @@ namespace Willow.Reflection
         private readonly IAccessorCache _Properties;
         private readonly IAccessorCache _StaticFields;
         private readonly IAccessorCache _StaticProperties;
-        //private readonly IMethodCache _Methods;
-        //private readonly IMethodCache _StaticMethods;
+        private readonly IMethodCache _Methods;
+        private readonly IMethodCache _StaticMethods;
 
         public ReflectionCache(Type ownerType)
         {
@@ -19,8 +19,8 @@ namespace Willow.Reflection
             this._Properties = new PropertyAccessorCache(ownerType);
             this._StaticFields = new StaticFieldAccessorCache(ownerType);
             this._StaticProperties = new StaticPropertyAccessorCache(ownerType);
-            //_Methods = new InstanceMethodCache(ownerType);
-            //_StaticMethods = new StaticMethodCache(ownerType);
+            _Methods = new InstanceMethodCache(ownerType);
+            _StaticMethods = new StaticMethodCache(ownerType);
         }
 
         public Type OwnerType { get { return this._OwnerType; } }
@@ -29,8 +29,8 @@ namespace Willow.Reflection
         public IAccessorCache StaticFields { get { return this._StaticFields; } }
         public IAccessorCache StaticProperties { get { return this._StaticProperties; } }
 
-        //public IMethodCache Methods { get { return this._Methods; } }
-        //public IMethodCache StaticMethods { get { return this._StaticMethods; } }
+        public IMethodCache Methods { get { return this._Methods; } }
+        public IMethodCache StaticMethods { get { return this._StaticMethods; } }
     }
 
     public class ReflectionCache<TOwner>
